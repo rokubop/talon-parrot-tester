@@ -98,11 +98,11 @@ def subtitle(text_value):
 
 def number(value, **kwargs):
     text = actions.user.ui_elements("text")
-    return text(value, font_family="consolas", **kwargs)
+    return text(value, **kwargs)
 
 def number_threshold(value, **kwargs):
     text = actions.user.ui_elements("text")
-    return text(f">{value}", font_family="consolas", color=SECONDARY_COLOR, **kwargs)
+    return text(f">{value}", color=SECONDARY_COLOR, **kwargs)
 
 def status_cell(status: str, graceperiod: bool = False):
     text, icon = actions.user.ui_elements(["text", "icon"])

@@ -206,25 +206,38 @@ def generate_import_code(
 import importlib.util
 import importlib.machinery
 
-fake_pkg = "{fake_pkg}"
-spec = importlib.util.spec_from_file_location(
-    f"{{fake_pkg}}.{module_name}",
-    r"{file_path}"
-)
-module = importlib.util.module_from_spec(spec)
-module.__package__ = fake_pkg
+module_name  = "{module_name}"
+fake_pkg    = "{fake_pkg}"
 
-# Create fake package in sys.modules
-pkg_module = importlib.util.module_from_spec(
-    importlib.machinery.ModuleSpec(fake_pkg, loader=None)
-)
-pkg_module.__path__ = [r"{str(Path(file_path).parent)}"]
-sys.modules[fake_pkg] = pkg_module
+# Load module from system modules if already imported before
+import os
 
-# Register submodule
-sys.modules[f"{{fake_pkg}}.{module_name}"] = module
+module = None
+target_path = os.path.abspath(r"{file_path}")
+for mod in sys.modules.values():
+    if hasattr(mod, "__file__") and mod.__file__:
+        if os.path.abspath(mod.__file__) == target_path:
+            module = mod
+            break
+if module is None:
+    spec = importlib.util.spec_from_file_location(
+        f"{fake_pkg}.{module_name}",
+        r"{file_path}"
+    )
+    module = importlib.util.module_from_spec(spec)
+    module.__package__ = fake_pkg
 
-spec.loader.exec_module(module)
+    # Create fake package in sys.modules
+    pkg_module = importlib.util.module_from_spec(
+        importlib.machinery.ModuleSpec(fake_pkg, loader=None)
+    )
+    pkg_module.__path__ = [r"{str(Path(file_path).parent)}"]
+    sys.modules[fake_pkg] = pkg_module
+
+    # Register submodule
+    sys.modules[f"{{fake_pkg}}.{module_name}"] = module
+
+    spec.loader.exec_module(module)
 
 {assigns}
 '''

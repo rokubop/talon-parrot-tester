@@ -6,7 +6,6 @@ from .parrot_integration_paths import (
     get_parrot_integration_path,
     get_patterns_py_path,
     load_patterns,
-    build_relative_import_path,
     generate_parrot_integration_hook,
 )
 
@@ -30,18 +29,10 @@ def parrot_tester_initialize(callback):
         patterns_py_path = get_patterns_py_path().resolve()
         current_path = Path(__file__).resolve()
 
-        current = Path(__file__).parent.resolve()
-        target = Path(parrot_integration_path).resolve()
-        user_root = Path(TALON_USER).resolve()
-
-        current_rel = current.relative_to(user_root)
-        target_rel = target.relative_to(user_root).with_suffix("")
-
         patterns_data = load_patterns(patterns_py_path)
         set_patterns_json(patterns_data)
 
-        import_path = build_relative_import_path(current_rel, target_rel)
-        generate_parrot_integration_hook(import_path, current_path)
+        generate_parrot_integration_hook(parrot_integration_path, current_path)
 
         def on_ready():
             actions.user.parrot_tester_wrap_parrot_integration()

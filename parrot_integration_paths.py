@@ -1,53 +1,94 @@
+import ast
+
 from pathlib import Path
+import importlib.util
 import os
 import sys
 import json
 import re
+import logging
 from talon_init import TALON_HOME
 
 DEBUG_PATH_DISCOVERY = False
 
-def extract_pattern_path_from_parrot_integration(parrot_integration_path: Path) -> str | None:
-    if DEBUG_PATH_DISCOVERY:
-        print(f"Parsing parrot_integration.py: {parrot_integration_path}")
+logger = logging.getLogger(__name__)
+if DEBUG_PATH_DISCOVERY:
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s')
+handler.setFormatter(formatter)
+if not logger.hasHandlers():
+    logger.addHandler(handler)
 
+def extract_pattern_path_from_parrot_integration(parrot_integration_path: Path) -> str | None:
+    logger.debug(f"Parsing parrot_integration.py: {parrot_integration_path}")
     try:
         with parrot_integration_path.open("r", encoding="utf-8") as f:
             content = f.read()
+        tree = ast.parse(content, filename=str(parrot_integration_path))
 
-        # Look for pattern_path = str(...) pattern
-        pattern_path_match = re.search(r'^\s*pattern_path\s*=\s*str\(([^)]+)\)', content, re.MULTILINE)
-        if pattern_path_match:
-            path_expr = pattern_path_match.group(1).strip()
-            if DEBUG_PATH_DISCOVERY:
-                print(f"   Found pattern_path = str({path_expr})")
+        def eval_path_expr(node):
+            # Handles Path(...), str(...), and BinOp (e.g., TALON_HOME / 'user' / ...)
+            if isinstance(node, ast.Call):
+                func_id = getattr(node.func, "id", None)
+                if func_id == "Path":
+                    parts = [eval_path_expr(a) for a in node.args]
+                    return str(Path(*parts))
+                if func_id == "str":
+                    return eval_path_expr(node.args[0])
+            elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+                # Handle pathlib 'Path(folder) / file' syntax
+                left = eval_path_expr(node.left)
+                right = eval_path_expr(node.right)
+                if isinstance(left, Path):
+                    return left / right
+                return Path(left) / right
+            elif isinstance(node, ast.Constant):
+                return node.value
+            elif isinstance(node, ast.Name):
+                if node.id == "TALON_HOME":
+                    return TALON_HOME
+            return None
 
-            # Look for PARROT_HOME definition
-            parrot_home_match = re.search(r'^\s*PARROT_HOME\s*=\s*TALON_HOME\s*/\s*[\'"]?([^\'")\s]+)[\'"]?', content, re.MULTILINE)
-            if parrot_home_match and 'PARROT_HOME' in path_expr:
-                parrot_subpath = parrot_home_match.group(1)
-                if DEBUG_PATH_DISCOVERY:
-                    print(f"   Found PARROT_HOME = TALON_HOME / '{parrot_subpath}'")
-                full_path = TALON_HOME / parrot_subpath / "patterns.json"
-                if DEBUG_PATH_DISCOVERY:
-                    print(f"   Constructed path: {full_path}")
-                return str(full_path)
+        pattern_path_value = None
+        parrot_home_value = None
 
-        # Alternative: look for direct pattern_path assignment
-        direct_match = re.search(r'^\s*pattern_path\s*=\s*[\'"]([^\'"]+)[\'"]', content, re.MULTILINE)
-        if direct_match:
-            path = direct_match.group(1)
-            if DEBUG_PATH_DISCOVERY:
-                print(f"   Found direct pattern_path = '{path}'")
-            return path
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        if target.id == "PARROT_HOME":
+                            try:
+                                parrot_home_value = eval_path_expr(node.value)
+                            except Exception as e:
+                                logger.debug(f"Failed to evaluate PARROT_HOME: {node.value}")
+                        elif target.id == "pattern_path":
+                            try:
+                                pattern_path_value = eval_path_expr(node.value)
+                            except Exception as e:
+                                logger.debug(f"Failed to evaluate pattern_path: {node.value}")
 
-        if DEBUG_PATH_DISCOVERY:
-            print("   No pattern_path found in file")
+        if pattern_path_value:
+            logger.debug(f"   Found pattern_path: {pattern_path_value}")
+            return str(pattern_path_value)
 
+        if parrot_home_value:
+            full_path_json = Path(parrot_home_value) / "patterns.json"
+            logger.debug(f"   Checking for patterns.json: {full_path_json}")
+            if full_path_json.exists():
+                logger.debug(f"   Found patterns.json: {full_path_json}")
+                return str(full_path_json)
+            full_path_py = Path(parrot_home_value) / "patterns.py"
+            logger.debug(f"   Checking for patterns.py: {full_path_py}")
+            if full_path_py.exists():
+                logger.debug(f"   Found patterns.py: {full_path_py}")
+                return str(full_path_py)
+
+        logger.debug("   No pattern_path found in file")
     except Exception as e:
-        if DEBUG_PATH_DISCOVERY:
-            print(f"   Failed to parse: {e}")
-
+        logger.error(f"   Failed to parse: {e}")
     return None
 
 def get_talon_user_path():
@@ -60,142 +101,168 @@ def get_talon_user_path():
 def get_parrot_integration_path():
     """Get the path to the parrot_integration.py file."""
     talon_user_path = get_talon_user_path()
-    if DEBUG_PATH_DISCOVERY:
-        print(f"🔍 Searching for parrot_integration.py in: {talon_user_path}")
+    logger.debug(f"🔍 Searching for parrot_integration.py in: {talon_user_path}")
 
     matches = list(Path(talon_user_path).rglob("parrot_integration.py"))
 
-    if DEBUG_PATH_DISCOVERY:
-        if matches:
-            print(f"   Found {len(matches)} parrot_integration.py files:")
-            for i, path in enumerate(matches):
-                print(f"     {i+1}. {path}")
-        else:
-            print("   No parrot_integration.py files found")
+    if matches:
+        logger.debug(f"   Found {len(matches)} parrot_integration.py files:")
+        for i, path in enumerate(matches):
+            logger.debug(f"     {i+1}. {path}")
+    else:
+        logger.debug("   No parrot_integration.py files found")
 
     return matches[0] if matches else None
 
 def get_patterns_py_path():
     """Get the path to the patterns.json file using 3-stage fallback."""
 
-    if DEBUG_PATH_DISCOVERY:
-        print("Starting patterns.json discovery process...")
+    logger.debug("Starting patterns.json discovery process...")
 
     # Stage 1: Try to parse parrot_integration.py to extract pattern_path
-    if DEBUG_PATH_DISCOVERY:
-        print("Stage 1: Parsing parrot_integration.py")
+    logger.debug("Stage 1: Parsing parrot_integration.py")
     try:
         parrot_integration_path = get_parrot_integration_path()
         if parrot_integration_path:
-            if DEBUG_PATH_DISCOVERY:
-                print(f"   Using parrot_integration.py: {parrot_integration_path}")
+            logger.debug(f"   Using parrot_integration.py: {parrot_integration_path}")
             pattern_path = extract_pattern_path_from_parrot_integration(parrot_integration_path)
             if pattern_path:
                 path_obj = Path(pattern_path)
                 if path_obj.exists():
-                    if DEBUG_PATH_DISCOVERY:
-                        print(f"Stage 1 SUCCESS: {pattern_path}")
+                    logger.info(f"Stage 1 SUCCESS: {pattern_path}")
                     return path_obj
                 else:
-                    if DEBUG_PATH_DISCOVERY:
-                        print(f"Stage 1: Path doesn't exist: {pattern_path}")
+                    logger.debug(f"Stage 1: Path doesn't exist: {pattern_path}")
             else:
-                if DEBUG_PATH_DISCOVERY:
-                    print("Stage 1: No pattern_path extracted")
+                logger.debug("Stage 1: No pattern_path extracted")
         else:
-            if DEBUG_PATH_DISCOVERY:
-                print("Stage 1: No parrot_integration.py found")
+            logger.debug("Stage 1: No parrot_integration.py found")
     except Exception as e:
-        if DEBUG_PATH_DISCOVERY:
-            print(f"Stage 1 failed: {e}")
+        logger.error(f"Stage 1 failed: {e}")
 
     # Stage 2: Try common location /talon/parrot/patterns.json
-    if DEBUG_PATH_DISCOVERY:
-        print("Stage 2: Checking common parrot location")
+    logger.debug("Stage 2: Checking common parrot location")
     try:
         parrot_patterns_path = TALON_HOME / "parrot" / "patterns.json"
-        if DEBUG_PATH_DISCOVERY:
-            print(f"   Checking: {parrot_patterns_path}")
+        logger.debug(f"   Checking: {parrot_patterns_path}")
         if parrot_patterns_path.exists():
-            if DEBUG_PATH_DISCOVERY:
-                print(f"Stage 2 SUCCESS: {parrot_patterns_path}")
+            logger.info(f"Stage 2 SUCCESS: {parrot_patterns_path}")
             return parrot_patterns_path
         else:
-            if DEBUG_PATH_DISCOVERY:
-                print("Stage 2: File doesn't exist")
+            logger.debug("Stage 2: File doesn't exist")
     except Exception as e:
-        if DEBUG_PATH_DISCOVERY:
-            print(f"Stage 2 failed: {e}")
+        logger.error(f"Stage 2 failed: {e}")
 
     # Stage 3: Fall back to searching within talon user directory
-    if DEBUG_PATH_DISCOVERY:
-        print("Stage 3: Searching in user directory")
+    logger.debug("Stage 3: Searching in user directory")
     try:
         talon_user_path = get_talon_user_path()
-        if DEBUG_PATH_DISCOVERY:
-            print(f"   Searching in: {talon_user_path}")
+        logger.debug(f"   Searching in: {talon_user_path}")
         matches = list(Path(talon_user_path).rglob("patterns.json"))
 
-        if DEBUG_PATH_DISCOVERY:
-            if matches:
-                print(f"   Found {len(matches)} matches:")
-                for i, path in enumerate(matches):
-                    print(f"     {i+1}. {path}")
-            else:
-                print("   No matches found")
+        if matches:
+            logger.debug(f"   Found {len(matches)} matches:")
+            for i, path in enumerate(matches):
+                logger.debug(f"     {i+1}. {path}")
+        else:
+            logger.debug("   No matches found")
 
         if matches:
             chosen = matches[0]
-            if DEBUG_PATH_DISCOVERY:
-                print(f"Stage 3 SUCCESS: Using first match: {chosen}")
+            logger.info(f"Stage 3 SUCCESS: Using first match: {chosen}")
             return chosen
         else:
-            if DEBUG_PATH_DISCOVERY:
-                print("Stage 3: No patterns.json found in user directory")
+            logger.debug("Stage 3: No patterns.json found in user directory")
     except Exception as e:
-        if DEBUG_PATH_DISCOVERY:
-            print(f"Stage 3 failed: {e}")
+        logger.error(f"Stage 3 failed: {e}")
 
-    if DEBUG_PATH_DISCOVERY:
-        print("ALL STAGES FAILED: Could not find patterns.json")
+    logger.warning("ALL STAGES FAILED: Could not find patterns.json")
     return None
 
 def load_patterns(path: Path) -> dict:
-    try:
-        with path.open("r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data
-    except Exception as e:
-        print(f"❌ Failed to load patterns from {path}: {e}")
+    if path.suffix == ".json":
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data
+        except Exception as e:
+            print(f"❌ Failed to load patterns from {path}: {e}")
+            return {}
+    elif path.suffix == ".py":
+        try:
+            spec = importlib.util.spec_from_file_location("patterns", path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module.parrot_patterns
+        except Exception as e:
+            print(f"❌ Failed to load patterns, ensure a variable named 'parrot_patterns' exists from {path}: {e}")
+            return {}
+    else:
+        print(f"❌ Unsupported file type for patterns: {path}")
         return {}
 
-def build_relative_import_path(current_file: Path, target_file: Path) -> str:
-    # Check for invalid Python identifiers (like dashes) in the path
-    invalid_parts = [part for part in target_file.parts if not part.isidentifier()]
-    if invalid_parts:
-        error_msg = f"""
-PARROT TESTER LIMITATION: Cannot work with your current parrot_integration.py path
+def generate_import_code(
+    file_path: str,
+    symbols: list[str],
+    fake_pkg: str | None = None,
+    indent: str = ""
+) -> str:
+    """
+    Generate Python code that imports a module from a file path, assigns the given symbols,
+    and supports relative imports even if the real path contains dashes.
 
-Issue: Parrot Tester has a technical limitation with folder names containing dashes or special characters.
-Your file: {target_file}
-Problematic parts: {', '.join(invalid_parts)}
+    :param file_path: Absolute path to the .py file to import
+    :param symbols: List of attribute names to import from that module
+    :param fake_pkg: Optional fake package name; defaults to parent directory's stem
+    :param indent: String to prepend to each line (e.g. '    ' for 4 spaces)
+    """
+    p = Path(file_path)
+    if fake_pkg is None:
+        fake_pkg = p.parent.stem
 
-Why: Parrot Tester uses Python import statements internally, which require valid identifiers
-(letters, numbers, underscores only).
+    module_name = p.stem
+    assigns = "\n".join(f"{sym} = module.{sym}" for sym in symbols)
 
-To use Parrot Tester: Rename folders containing dashes to use underscores, or move the parrot_integration.py elsewhere.
+    code = f'''
 
-Example rename: {str(target_file).replace('-', '_')}
+module_name  = "{module_name}"
+fake_pkg    = "{fake_pkg}"
 
-Your folder naming is perfectly valid - this is just a technical constraint of this tool.
-"""
-        raise ValueError(error_msg)
+# Load module from system modules if already imported before
 
-    up_levels = len(current_file.parts)
-    dot_prefix = "." * up_levels if up_levels > 0 else "."
-    target_module = ".".join(target_file.parts)
+module = None
+target_path = os.path.abspath(r"{file_path}")
+for mod in sys.modules.values():
+    if hasattr(mod, "__file__") and mod.__file__:
+        if os.path.abspath(mod.__file__) == target_path:
+            module = mod
+            break
+if module is None:
+    spec = importlib.util.spec_from_file_location(
+        f"{fake_pkg}.{module_name}",
+        r"{file_path}"
+    )
+    module = importlib.util.module_from_spec(spec)
+    module.__package__ = fake_pkg
 
-    return f"{dot_prefix}.{target_module}"
+    # Create fake package in sys.modules
+    pkg_module = importlib.util.module_from_spec(
+        importlib.machinery.ModuleSpec(fake_pkg, loader=None)
+    )
+    pkg_module.__path__ = [r"{str(Path(file_path).parent)}"]
+    sys.modules[fake_pkg] = pkg_module
+
+    # Register submodule
+    sys.modules[f"{{fake_pkg}}.{module_name}"] = module
+
+    spec.loader.exec_module(module)
+
+{assigns}
+'''
+
+    # Apply indentation to all non-empty lines
+    return "\n".join(f"{indent}{line}" if line.strip() else line for line in code.splitlines())
+
 
 def generate_parrot_integration_hook(import_path: str, current_file: Path) -> bool:
     """
@@ -211,17 +278,24 @@ def generate_parrot_integration_hook(import_path: str, current_file: Path) -> bo
 # while preserving the integrity of the original source.
 try:
     from talon import Context
-    from {import_path} import parrot_delegate
-    from .parrot_integration_wrapper import (
-        parrot_tester_wrap_parrot_integration,
-        parrot_tester_restore_parrot_integration
-    )
+    import importlib.util
+    import traceback
+    import sys
+    import os
+    import importlib.machinery
+{generate_import_code(Path(import_path).resolve(), ["parrot_delegate"], indent="    ")}
+
+{generate_import_code(target_dir / "parrot_integration_wrapper.py", [
+        "parrot_tester_wrap_parrot_integration",
+        "parrot_tester_restore_parrot_integration",
+    ], "parrot_tester", indent="    ")}
 
     ctx = Context()
 
     @ctx.action_class("user")
     class Actions:
         def parrot_tester_integration_ready():
+            print("Hook checks as initialised")
             return True
 
         def parrot_tester_wrap_parrot_integration():
@@ -229,8 +303,9 @@ try:
 
         def parrot_tester_restore_parrot_integration():
             parrot_tester_restore_parrot_integration(parrot_delegate)
-except ImportError:
-    pass
+except ImportError as e:
+    print("Error initialising hook: ", e)
+    print(traceback.format_exc())
 """
 
     hook_file.write_text(code)

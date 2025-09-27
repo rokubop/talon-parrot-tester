@@ -1,3 +1,4 @@
+import sys
 from talon import actions
 from ..parrot_integration_controller import (
     get_pattern_json,
@@ -98,11 +99,26 @@ def subtitle(text_value):
 
 def number(value, **kwargs):
     text = actions.user.ui_elements("text")
-    return text(value, **kwargs)
+    return text(value, font_family=choose_monospace_font_family(), **kwargs)
 
 def number_threshold(value, **kwargs):
     text = actions.user.ui_elements("text")
-    return text(f">{value}", color=SECONDARY_COLOR, **kwargs)
+    return text(f">{value}", font_family=choose_monospace_font_family(), color=SECONDARY_COLOR, **kwargs)
+
+def choose_monospace_font_family():
+    try:
+        from tkinter import font
+        system_monospace_font = font.nametofont("TkFixedFont").actual()
+        return system_monospace_font["family"]
+    except ModuleNotFoundError:
+        # system defaults.
+        if sys.platform == "win32":
+            return "consolas"
+        elif sys.platform == "darwin":
+            return "menlo"
+        else:
+            return "dejavusansmono"
+
 
 def status_cell(status: str, graceperiod: bool = False):
     text, icon = actions.user.ui_elements(["text", "icon"])

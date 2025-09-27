@@ -9,7 +9,7 @@ import re
 import logging
 from talon_init import TALON_HOME
 
-DEBUG_PATH_DISCOVERY = True
+DEBUG_PATH_DISCOVERY = False
 
 logger = logging.getLogger(__name__)
 if DEBUG_PATH_DISCOVERY:
@@ -223,15 +223,12 @@ def generate_import_code(
     module_name = p.stem
     assigns = "\n".join(f"{sym} = module.{sym}" for sym in symbols)
 
-    code = f'''import sys
-import importlib.util
-import importlib.machinery
+    code = f'''
 
 module_name  = "{module_name}"
 fake_pkg    = "{fake_pkg}"
 
 # Load module from system modules if already imported before
-import os
 
 module = None
 target_path = os.path.abspath(r"{file_path}")
@@ -283,6 +280,9 @@ try:
     from talon import Context
     import importlib.util
     import traceback
+    import sys
+    import os
+    import importlib.machinery
 {generate_import_code(Path(import_path).resolve(), ["parrot_delegate"], indent="    ")}
 
 {generate_import_code(target_dir / "parrot_integration_wrapper.py", [

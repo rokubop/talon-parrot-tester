@@ -6,7 +6,7 @@ from .parrot_integration_paths import (
     get_parrot_integration_path,
     get_patterns_py_path,
     load_patterns,
-    build_relative_import_path,
+    build_module_path,
     generate_parrot_integration_hook,
 )
 
@@ -22,7 +22,7 @@ def wait_for_ready(callback, attempts=0):
         print("Parrot Tester could not initialize after 10 attempts (5 seconds total waited)")
 
 def parrot_tester_initialize(callback):
-    """Test function to check if the paths are correct."""
+    """Initialize Parrot Tester and wrap parrot_integration."""
     print("**** Starting Parrot Tester ****")
 
     try:
@@ -40,8 +40,8 @@ def parrot_tester_initialize(callback):
         patterns_data = load_patterns(patterns_py_path)
         set_patterns_json(patterns_data)
 
-        import_path = build_relative_import_path(current_rel, target_rel)
-        generate_parrot_integration_hook(import_path, current_path)
+        module_path = build_module_path(current_rel, target_rel, user_root)
+        generate_parrot_integration_hook(module_path, current_path)
 
         def on_ready():
             actions.user.parrot_tester_wrap_parrot_integration()

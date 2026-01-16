@@ -169,41 +169,30 @@ def load_patterns(path: Path) -> dict:
         print(f"❌ Failed to load patterns from {path}: {e}")
         return {}
 
-def build_relative_import_path(current_file: Path, target_file: Path) -> str:
-    # Check for invalid Python identifiers (like dashes) in the path
-    invalid_parts = [part for part in target_file.parts if not part.isidentifier()]
-    if invalid_parts:
-        error_msg = f"""
-PARROT TESTER LIMITATION: Cannot work with your current parrot_integration.py path
-
-Issue: Parrot Tester has a technical limitation with folder names containing dashes or special characters.
-Your file: {target_file}
-Problematic parts: {', '.join(invalid_parts)}
-
-Why: Parrot Tester uses Python import statements internally, which require valid identifiers
-(letters, numbers, underscores only).
-
-To use Parrot Tester: Rename folders containing dashes to use underscores, or move the parrot_integration.py elsewhere.
-
-Example rename: {str(target_file).replace('-', '_')}
-
-Your folder naming is perfectly valid - this is just a technical constraint of this tool.
-"""
-        raise ValueError(error_msg)
-
-    up_levels = len(current_file.parts)
-    dot_prefix = "." * up_levels if up_levels > 0 else "."
-    target_module = ".".join(target_file.parts)
-
-    return f"{dot_prefix}.{target_module}"
-
-def generate_parrot_integration_hook(import_path: str, current_file: Path) -> bool:
+def build_module_path(current_file: Path, target_file: Path, user_root: Path) -> Path:
     """
-    Generate the parrot_integration_hook.py file.
-    Returns True if this is the first time generating the file, False otherwise.
+    Build the absolute path to the target module file.
+    Uses importlib to load modules directly from file paths,
+    bypassing Python identifier restrictions.
+    """
+    # target_file is relative to user_root without .py extension
+    full_path = user_root / target_file.with_suffix(".py")
+
+    if not full_path.exists():
+        raise ValueError(f"Target parrot_integration.py not found at: {full_path}")
+
+    return full_path
+
+def generate_parrot_integration_hook(module_path: Path, current_file: Path) -> bool:
+    """
+    Generate the parrot_integration_hook.py file using importlib for module loading.
+    This allows importing from paths with dashes or other special characters.
     """
     target_dir = current_file.parent
     hook_file = target_dir / "parrot_integration_hook.py"
+
+    # Escape backslashes for Windows paths in the generated Python code
+    module_path_str = str(module_path).replace("\\", "\\\\")
 
     code = f"""\
 # AUTO-GENERATED: Do not edit manually.
@@ -211,11 +200,43 @@ def generate_parrot_integration_hook(import_path: str, current_file: Path) -> bo
 # while preserving the integrity of the original source.
 try:
     from talon import Context
-    from {import_path} import parrot_delegate
+    import importlib.util
+    import sys
+    from pathlib import Path
     from .parrot_integration_wrapper import (
         parrot_tester_wrap_parrot_integration,
         parrot_tester_restore_parrot_integration
     )
+
+    def _get_parrot_delegate():
+        # Find the ACTUAL parrot_integration module that Talon already loaded
+        # by searching sys.modules for the one loaded from this specific path
+        _module_path = Path(r"{module_path_str}")
+
+        # Search sys.modules for a module loaded from this file path
+        for module_name, module in list(sys.modules.items()):
+            if module is None:
+                continue
+            try:
+                if hasattr(module, '__file__') and module.__file__:
+                    module_file = Path(module.__file__).resolve()
+                    if module_file == _module_path and hasattr(module, 'parrot_delegate'):
+                        return module.parrot_delegate
+            except Exception:
+                pass
+        
+        # If not found in sys.modules, load it fresh (first run scenario)
+        _spec = importlib.util.spec_from_file_location("parrot_integration_for_tester", _module_path)
+        if _spec is None:
+            raise ImportError(f"Cannot load module spec from {{_module_path}}")
+        
+        _module = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_module)
+        
+        if not hasattr(_module, 'parrot_delegate'):
+            raise AttributeError(f"Module {{_module_path}} has no 'parrot_delegate' attribute")
+        
+        return _module.parrot_delegate
 
     ctx = Context()
 
@@ -225,13 +246,16 @@ try:
             return True
 
         def parrot_tester_wrap_parrot_integration():
+            parrot_delegate = _get_parrot_delegate()
             parrot_tester_wrap_parrot_integration(parrot_delegate)
 
         def parrot_tester_restore_parrot_integration():
+            parrot_delegate = _get_parrot_delegate()
             parrot_tester_restore_parrot_integration(parrot_delegate)
-except ImportError:
-    pass
+except Exception as e:
+    print(f"Parrot Tester Hook Error: {{e}}")
+    import traceback
+    traceback.print_exc()
 """
 
     hook_file.write_text(code)
-    print(f"Generated file: {hook_file}")

@@ -208,12 +208,11 @@ try:
         parrot_tester_restore_parrot_integration
     )
 
-    def _get_parrot_delegate():
-        # Find the ACTUAL parrot_integration module that Talon already loaded
+    def get_parrot_delegate():
+        # Find the parrot_integration module that Talon already loaded
         # by searching sys.modules for the one loaded from this specific path
         _module_path = Path(r"{module_path_str}")
 
-        # Search sys.modules for a module loaded from this file path
         for module_name, module in list(sys.modules.items()):
             if module is None:
                 continue
@@ -224,18 +223,18 @@ try:
                         return module.parrot_delegate
             except Exception:
                 pass
-        
+
         # If not found in sys.modules, load it fresh (first run scenario)
         _spec = importlib.util.spec_from_file_location("parrot_integration_for_tester", _module_path)
         if _spec is None:
             raise ImportError(f"Cannot load module spec from {{_module_path}}")
-        
+
         _module = importlib.util.module_from_spec(_spec)
         _spec.loader.exec_module(_module)
-        
+
         if not hasattr(_module, 'parrot_delegate'):
             raise AttributeError(f"Module {{_module_path}} has no 'parrot_delegate' attribute")
-        
+
         return _module.parrot_delegate
 
     ctx = Context()
@@ -246,11 +245,11 @@ try:
             return True
 
         def parrot_tester_wrap_parrot_integration():
-            parrot_delegate = _get_parrot_delegate()
+            parrot_delegate = get_parrot_delegate()
             parrot_tester_wrap_parrot_integration(parrot_delegate)
 
         def parrot_tester_restore_parrot_integration():
-            parrot_delegate = _get_parrot_delegate()
+            parrot_delegate = get_parrot_delegate()
             parrot_tester_restore_parrot_integration(parrot_delegate)
 except Exception as e:
     print(f"Parrot Tester Hook Error: {{e}}")
@@ -259,3 +258,4 @@ except Exception as e:
 """
 
     hook_file.write_text(code)
+    print(f"Generated file: {hook_file}")

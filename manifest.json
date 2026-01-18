@@ -1,22 +1,29 @@
 {
-  "name": "parrot_tester",
+  "name": "talon-parrot-tester",
   "title": "Parrot Tester",
   "description": "Visual tool for testing parrot integration with Talon",
-  "version": "0.6.0",
-  "github": "https://github.com/rokubop/parrot_tester",
-  "preview": "https://github.com/rokubop/parrot_tester/preview.png",
-  "author": "Rokubop",
-  "tags": [
-    "parrot"
-  ],
+  "version": "0.7.0",
+  "status": "stable",
+  "namespace": "user.parrot_tester",
+  "github": "https://github.com/rokubop/talon-parrot-tester",
+  "preview": "https://github.com/rokubop/talon-parrot-tester/preview.png",
+  "author": "Roku",
+  "tags": ["parrot"],
+  "dependencies": {
+    "talon-ui-elements": {
+      "version": "0.9.0",
+      "namespace": "user.ui_elements",
+      "github": "https://github.com/rokubop/talon-ui-elements"
+    }
+  },
+  "devDependencies": {},
   "contributes": {
-    "tags": [
-      "user.parrot_tester"
-    ],
+    "tags": ["user.parrot_tester"],
     "actions": [
       "user.parrot_tester_integration_ready",
       "user.parrot_tester_restore_parrot_integration",
       "user.parrot_tester_toggle",
+      "user.parrot_tester_version",
       "user.parrot_tester_wrap_parrot_integration"
     ]
   },
@@ -32,5 +39,11 @@
       "user.ui_elements_svg",
       "user.ui_elements_toggle_hints"
     ]
-  }
+  },
+  "requiresTalonBeta": true,
+  "validateDependencies": true,
+  "_generator": "talon-manifest-generator",
+  "_generatorVersion": "2.0.0",
+  "_generatorRequiresVersionAction": true,
+  "_generatorStrictNamespace": true
 }

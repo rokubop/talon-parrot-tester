@@ -56,6 +56,21 @@ def page_about():
                     ],
                 ],
                 tr()[
+                    td()[text("Talon UI Elements", color=SECONDARY_COLOR)],
+                    td()[
+                        link(
+                            url="https://github.com/rokubop/talon-ui-elements",
+                            minimize_on_click=True,
+                            flex_direction="row",
+                            gap=8,
+                            align_items="center"
+                        )[
+                            text("https://github.com/rokubop/talon-ui-elements", color=ACCENT_COLOR),
+                            icon("external_link", size=16, color=ACCENT_COLOR),
+                        ],
+                    ],
+                ],
+                tr()[
                     td()[text("Parrot.py GitHub", color=SECONDARY_COLOR)],
                     td()[
                         link(

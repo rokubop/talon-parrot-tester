@@ -19,7 +19,7 @@ view_map = {
 
 def view_tabs():
     div, button, text, state = actions.user.ui_elements(["div", "button", "text", "state"])
-    tab_state, set_tab = state.use("patterns_view", "full")
+    tab_state, set_tab = state.use("patterns_view", "medium")
 
     return div(
         flex_direction="row",
@@ -52,8 +52,8 @@ def page_patterns():
     text, button, state, style = actions.user.ui_elements(["text", "button", "state", "style"])
     patterns = get_patterns_json()
     pattern_items = list(patterns.items())
-    view = state.get("patterns_view", "full")
-    num_patterns_horizontal = 6 if view == "compact" else 4
+    view = state.get("patterns_view", "medium")
+    num_patterns_horizontal = 6 if view == "compact" else 3
     pattern_groups = [pattern_items[i:i + num_patterns_horizontal] for i in range(0, len(pattern_items), num_patterns_horizontal)]
 
     style({

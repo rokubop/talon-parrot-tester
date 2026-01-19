@@ -6,19 +6,23 @@
   "status": "stable",
   "namespace": "user.parrot_tester",
   "github": "https://github.com/rokubop/talon-parrot-tester",
-  "preview": "https://github.com/rokubop/talon-parrot-tester/preview.png",
+  "preview": "https://raw.githubusercontent.com/rokubop/talon-parrot-tester/main/preview.png",
   "author": "Roku",
-  "tags": ["parrot"],
+  "tags": [
+    "parrot"
+  ],
   "dependencies": {
     "talon-ui-elements": {
-      "version": "0.9.0",
+      "version": "0.13.0",
       "namespace": "user.ui_elements",
       "github": "https://github.com/rokubop/talon-ui-elements"
     }
   },
   "devDependencies": {},
   "contributes": {
-    "tags": ["user.parrot_tester"],
+    "tags": [
+      "user.parrot_tester"
+    ],
     "actions": [
       "user.parrot_tester_integration_ready",
       "user.parrot_tester_restore_parrot_integration",
@@ -40,10 +44,10 @@
       "user.ui_elements_toggle_hints"
     ]
   },
-  "requiresTalonBeta": true,
   "validateDependencies": true,
   "_generator": "talon-manifest-generator",
   "_generatorVersion": "2.0.0",
   "_generatorRequiresVersionAction": true,
-  "_generatorStrictNamespace": true
+  "_generatorStrictNamespace": true,
+  "_generatorFrozenFields": []
 }

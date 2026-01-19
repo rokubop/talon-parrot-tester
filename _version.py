@@ -15,13 +15,25 @@ mod = Module()
 @mod.action_class
 class Actions:
     def parrot_tester_version() -> tuple[int, int, int]:
-        """Returns the package version as (major, minor, patch)"""
+        """
+        Returns the package version as (major, minor, patch).
+
+        Usage: actions.user.parrot_tester_version() >= (1, 2, 0)
+        """
         manifest_path = os.path.join(os.path.dirname(__file__), 'manifest.json')
         with open(manifest_path, 'r', encoding='utf-8') as f:
             version_str = json.load(f)['version']
         return tuple(map(int, version_str.split('.')))
 
 def validate_dependencies():
+    """
+    Checks dependencies from manifest.json and calls {namespace}_version()
+    for each to verify installed versions meet requirements on Talon startup.
+
+    Prints warnings to Talon log when dependencies are missing or outdated,
+    including installation/update instructions. Can be disabled by setting
+    'validateDependencies': false in manifest.json.
+    """
     try:
         with open(os.path.join(os.path.dirname(__file__), 'manifest.json'), 'r') as f:
             data = json.load(f)
@@ -48,10 +60,9 @@ def validate_dependencies():
                         errors.append(f"    Navigate to the {dep} directory and run: git pull")
                         errors.append(f"    {github_url}")
             except AttributeError:
-                errors.append(f"  Install {dep} (missing {version_action})")
+                errors.append(f"  Cannot verify {dep} {info['version']}+ (missing or invalid {version_action} action)")
                 if github_url:
-                    errors.append(f"    Clone to your talon user directory:")
-                    errors.append(f"    git clone {github_url}")
+                    errors.append(f"    Install/update from: {github_url}")
             except Exception as e:
                 errors.append(f"  {dep}: {e}")
 
@@ -60,7 +71,6 @@ def validate_dependencies():
             for error in errors:
                 print(error)
             print("  WARNING: Review code from unfamiliar sources before installing")
-            print("  Note: Restart Talon after updating dependencies")
             print(f"  To disable these warnings, set 'validateDependencies': false in {data.get('name')}/manifest.json")
             print()
     except:

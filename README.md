@@ -2,7 +2,6 @@
 
 ![Version](https://img.shields.io/badge/version-0.7.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-green)
-![Talon Beta](https://img.shields.io/badge/talon%20beta-required-red)
 
 Parrot Tester is a visualization tool to help you analyze your parrot integration with Talon, showing live data for frames, history, activity, and stats, using your existing `parrot_integration.py` and `patterns.json` files.
 
@@ -12,11 +11,9 @@ Parrot Tester is a visualization tool to help you analyze your parrot integratio
 
 ### Dependencies
 
-This repo requires:
 - [**Talon Beta**](https://talon.wiki/Help/beta_talon/)
-- [**talon-ui-elements**](https://github.com/rokubop/talon-ui-elements) (v0.9.0+)
-- A working parrot model with `parrot_integration.py` and `patterns.json` files
-
+- **Parrot** - Trained parrot model with `parrot_integration.py` and `patterns.json` files
+- [**talon-ui-elements**](https://github.com/rokubop/talon-ui-elements) (v0.13.0+)
 
 ### Install
 

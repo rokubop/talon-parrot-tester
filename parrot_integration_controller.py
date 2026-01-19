@@ -1,5 +1,5 @@
 from pathlib import Path
-from talon import actions, cron, Context
+from talon import actions, cron, registry, Context
 from talon_init import TALON_USER
 from .ui.colors import get_color
 from .parrot_integration_paths import (
@@ -30,6 +30,16 @@ def wait_for_ready(callback, attempts=0):
         cron.after("500ms", lambda: wait_for_ready(callback, attempts + 1))
     else:
         print("Parrot Tester could not initialize after 10 attempts (5 seconds total waited)")
+
+def wait_for_registry_populated(callback, attempts=0):
+    parrot_noises = getattr(registry, "parrot_noises", {})
+    if parrot_noises:
+        callback()
+    elif attempts < 10:
+        cron.after("500ms", lambda: wait_for_registry_populated(callback, attempts + 1))
+    else:
+        print("Parrot registry not populated after 10 attempts, continuing anyway...")
+        callback()
 
 def parrot_tester_initialize(callback):
     """Initialize Parrot Tester and wrap parrot_integration."""
@@ -65,7 +75,7 @@ def parrot_tester_initialize(callback):
 
         if temp_file_created:
             print("Waiting for Talon to process temporary parrot file...")
-            cron.after("1000ms", continue_initialization)
+            wait_for_registry_populated(continue_initialization)
         else:
             continue_initialization()
 

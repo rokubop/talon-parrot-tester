@@ -17,7 +17,7 @@ def create_temp_parrot_file(patterns_data: dict):
         first_pattern = next(iter(patterns_data.keys())) if patterns_data else "pop"
         current_dir = Path(__file__).parent
         temp_file_path = current_dir / "parrot_integration_temp.talon"
-        temp_content = f"# Temporary file to populate parrot registry - auto-generated\ntag: user.parrot_tester\nparrot({first_pattern}): skip()\n"
+        temp_content = f"# Temporary file to populate parrot registry - auto-generated\ntag: user.parrot_tester\n-\nparrot({first_pattern}): skip()\n"
         temp_file_path.write_text(temp_content)
         print(f"Created temporary parrot file: {temp_file_path}")
 

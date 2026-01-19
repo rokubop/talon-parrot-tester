@@ -54,9 +54,9 @@ def table_log():
             th()[text("Pattern", color=SECONDARY_COLOR)],
             # th()[text("Sounds", color=SECONDARY_COLOR)],
             th(align_items="flex_end")[text("Power", color=SECONDARY_COLOR)],
-            th(align_items="flex_end")[text(">Pow", color=SECONDARY_COLOR)] if show_thresholds else None,
+            th(align_items="flex_end")[text("> Pow", color=SECONDARY_COLOR)] if show_thresholds else None,
             th(align_items="flex_end")[text("Prob.", color=SECONDARY_COLOR)],
-            th(align_items="flex_end")[text(">Prob.", color=SECONDARY_COLOR)] if show_thresholds else None,
+            th(align_items="flex_end")[text("> Prob.", color=SECONDARY_COLOR)] if show_thresholds else None,
             *[
                 th(align_items="flex_end", justify_content="center")[
                     text("F0", color=SECONDARY_COLOR),

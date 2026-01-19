@@ -41,22 +41,22 @@ def page_about():
                     td()[text(get_version())],
                 ],
                 tr()[
-                    td()[text("Parrot tester GitHub", color=SECONDARY_COLOR)],
+                    td()[text("Parrot Tester GitHub", color=SECONDARY_COLOR)],
                     td()[
                         link(
-                            url="https://github.com/rokubop/parrot_tester",
+                            url="https://github.com/rokubop/talon-parrot-tester",
                             minimize_on_click=True,
                             flex_direction="row",
                             gap=8,
                             align_items="center"
                         )[
-                            text("https://github.com/rokubop/parrot_tester", color=ACCENT_COLOR),
+                            text("https://github.com/rokubop/talon-parrot-tester", color=ACCENT_COLOR),
                             icon("external_link", size=16, color=ACCENT_COLOR),
                         ],
                     ],
                 ],
                 tr()[
-                    td()[text("parrot.py GitHub", color=SECONDARY_COLOR)],
+                    td()[text("Parrot.py GitHub", color=SECONDARY_COLOR)],
                     td()[
                         link(
                             url="https://github.com/chaosparrot/parrot.py",

@@ -127,7 +127,8 @@ def page_detection_log():
     current_log_id, set_current_log_id = state.use("detection_current_log_id", None)
 
     def on_mount(e):
-        populate_detection_log_state()
+        if not detection_log_history:
+            populate_detection_log_state()
 
     effect(on_mount, [])
 

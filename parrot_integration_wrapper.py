@@ -601,11 +601,12 @@ def parrot_tester_wrap_parrot_integration(parrot_delegate):
         parrot_delegate.pattern_match = wrap_pattern_match(parrot_delegate)
         print("parrot_integration.py wrapped")
 
-def parrot_tester_restore_parrot_integration(parrot_delegate):
+def parrot_tester_restore_parrot_integration(parrot_delegate, reset_ui_state=True):
     global original_pattern_match
     if original_pattern_match is not None:
         parrot_delegate.pattern_match = original_pattern_match
         original_pattern_match = None
 
-    reset_capture_collection()
+    if reset_ui_state:
+        reset_capture_collection()
     print("parrot_integration.py restored")

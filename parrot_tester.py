@@ -19,6 +19,6 @@ class Actions:
         """Wrap parrot_integration file for introspection - Automatically overwritten by context"""
         actions.skip()
 
-    def parrot_tester_restore_parrot_integration():
+    def parrot_tester_restore_parrot_integration(reset_ui_state: bool = True):
         """Restore parrot_integration file - Automatically overwritten by context"""
         actions.skip()

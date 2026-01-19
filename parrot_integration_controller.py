@@ -90,11 +90,11 @@ def parrot_tester_initialize(callback):
         return
 
 def restore_patterns_paused():
-    actions.user.parrot_tester_restore_parrot_integration()
+    actions.user.parrot_tester_restore_parrot_integration(reset_ui_state=False)
     disable_parrot_tester_tag()
 
 def restore_patterns():
-    actions.user.parrot_tester_restore_parrot_integration()
+    actions.user.parrot_tester_restore_parrot_integration(reset_ui_state=True)
     clear_patterns_json()
     remove_temp_parrot_file()
     disable_parrot_tester_tag()

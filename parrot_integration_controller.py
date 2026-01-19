@@ -1,5 +1,5 @@
 from pathlib import Path
-from talon import actions, cron
+from talon import actions, cron, Context
 from talon_init import TALON_USER
 from .ui.colors import get_color
 from .parrot_integration_paths import (
@@ -8,9 +8,19 @@ from .parrot_integration_paths import (
     load_patterns,
     build_module_path,
     generate_parrot_integration_hook,
+    create_temp_parrot_file,
+    remove_temp_parrot_file,
 )
 
 patterns_json = {}
+
+tag_ctx = Context()
+
+def enable_parrot_tester_tag():
+    tag_ctx.tags = ["user.parrot_tester"]
+
+def disable_parrot_tester_tag():
+    tag_ctx.tags = []
 
 def wait_for_ready(callback, attempts=0):
     is_ready = actions.user.parrot_tester_integration_ready()
@@ -24,6 +34,7 @@ def wait_for_ready(callback, attempts=0):
 def parrot_tester_initialize(callback):
     """Initialize Parrot Tester and wrap parrot_integration."""
     print("**** Starting Parrot Tester ****")
+    enable_parrot_tester_tag()
 
     try:
         parrot_integration_path = get_parrot_integration_path().resolve()
@@ -40,29 +51,43 @@ def parrot_tester_initialize(callback):
         patterns_data = load_patterns(patterns_py_path)
         set_patterns_json(patterns_data)
 
-        module_path = build_module_path(current_rel, target_rel, user_root)
-        generate_parrot_integration_hook(module_path, current_path)
+        temp_file_created = create_temp_parrot_file(patterns_data)
 
-        def on_ready():
-            actions.user.parrot_tester_wrap_parrot_integration()
-            callback()
+        def continue_initialization():
+            module_path = build_module_path(current_rel, target_rel, user_root)
+            generate_parrot_integration_hook(module_path, current_path)
 
-        wait_for_ready(on_ready)
+            def on_ready():
+                actions.user.parrot_tester_wrap_parrot_integration()
+                callback()
+
+            wait_for_ready(on_ready)
+
+        if temp_file_created:
+            print("Waiting for Talon to process temporary parrot file...")
+            cron.after("1000ms", continue_initialization)
+        else:
+            continue_initialization()
 
     except ValueError as e:
         # This catches our detailed error message about invalid paths
         print(str(e))
+        disable_parrot_tester_tag()
         return
     except Exception as e:
         print(f"❌ PARROT TESTER ERROR: Failed to initialize: {e}")
+        disable_parrot_tester_tag()
         return
 
 def restore_patterns_paused():
     actions.user.parrot_tester_restore_parrot_integration()
+    disable_parrot_tester_tag()
 
 def restore_patterns():
     actions.user.parrot_tester_restore_parrot_integration()
     clear_patterns_json()
+    remove_temp_parrot_file()
+    disable_parrot_tester_tag()
 
 def get_pattern_color(name: str):
     global_patterns = get_patterns_json()

@@ -4,8 +4,34 @@ import sys
 import json
 import re
 from talon_init import TALON_HOME
+from talon import registry
 
 DEBUG_PATH_DISCOVERY = False
+
+def create_temp_parrot_file(patterns_data: dict):
+    """Needed if registry.parrot_noises is empty."""
+    parrot_noises = getattr(registry, "parrot_noises", {})
+
+    if not parrot_noises:
+        print("Parrot Tester: No parrot noises detected in registry, creating temporary file...")
+        first_pattern = next(iter(patterns_data.keys())) if patterns_data else "pop"
+        current_dir = Path(__file__).parent
+        temp_file_path = current_dir / "parrot_integration_temp.talon"
+        temp_content = f"# Temporary file to populate parrot registry - auto-generated\ntag: user.parrot_tester\nparrot({first_pattern}): skip()\n"
+        temp_file_path.write_text(temp_content)
+        print(f"Created temporary parrot file: {temp_file_path}")
+
+        return True
+
+    return False
+
+def remove_temp_parrot_file():
+    current_dir = Path(__file__).parent
+    temp_file_path = current_dir / "parrot_integration_temp.talon"
+
+    if temp_file_path.exists():
+        print(f"Removing temporary parrot file: {temp_file_path}")
+        temp_file_path.unlink()
 
 def extract_pattern_path_from_parrot_integration(parrot_integration_path: Path) -> str | None:
     if DEBUG_PATH_DISCOVERY:

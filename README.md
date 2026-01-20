@@ -2,6 +2,7 @@
 
 ![Version](https://img.shields.io/badge/version-0.7.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-green)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 Parrot Tester is a visualization tool to help you analyze your parrot integration with Talon, showing live data for frames, history, activity, and stats, using your existing `parrot_integration.py` and `patterns.json` files.
 

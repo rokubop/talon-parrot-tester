@@ -45,22 +45,23 @@ def validate_dependencies():
         errors = []
 
         for dep, info in deps.items():
-            version_action = f"{info['namespace']}_version"
+            version_action = f"{info.get('namespace')}_version"
             github_url = info.get('github', '')
+            version_str = info.get('min_version') or info.get('version')
             try:
                 action_ref = actions
                 for part in version_action.split('.'):
                     action_ref = getattr(action_ref, part)
                 installed = action_ref()
-                required = tuple(int(x) for x in info['version'].split('.'))
+                required = tuple(int(x) for x in version_str.split('.'))
                 if installed < required:
                     installed_str = '.'.join(map(str, installed))
-                    errors.append(f"  Update {dep} to {info['version']}+ (currently {installed_str})")
+                    errors.append(f"  Update {dep} to {version_str}+ (currently {installed_str})")
                     if github_url:
                         errors.append(f"    Navigate to the {dep} directory and run: git pull")
                         errors.append(f"    {github_url}")
             except AttributeError:
-                errors.append(f"  Cannot verify {dep} {info['version']}+ (missing or invalid {version_action} action)")
+                errors.append(f"  Cannot verify {dep} {version_str}+ (missing or invalid {version_action} action)")
                 if github_url:
                     errors.append(f"    Install/update from: {github_url}")
             except Exception as e:

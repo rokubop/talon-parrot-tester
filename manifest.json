@@ -11,9 +11,10 @@
   "tags": [
     "parrot"
   ],
+  "license": "MIT",
   "dependencies": {
     "talon-ui-elements": {
-      "version": "0.13.0",
+      "min_version": "0.13.0",
       "namespace": "user.ui_elements",
       "github": "https://github.com/rokubop/talon-ui-elements"
     }

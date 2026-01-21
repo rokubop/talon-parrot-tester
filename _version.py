@@ -7,10 +7,18 @@ This file provides:
 - Automatic dependency validation on startup
 """
 import json
-import os
+from pathlib import Path
 from talon import Module, actions, app
 
 mod = Module()
+
+try:
+    # Version is cached at import. Restart or save this file to pick up changes.
+    with open(Path(__file__).parent / 'manifest.json', 'r', encoding='utf-8') as f:
+        _VERSION = tuple(map(int, json.load(f)['version'].split('.')))
+except Exception as e:
+    print(f"ERROR: talon-parrot-tester failed to load version from manifest.json: {e}")
+    _VERSION = (0, 0, 0)
 
 @mod.action_class
 class Actions:
@@ -20,10 +28,7 @@ class Actions:
 
         Usage: actions.user.parrot_tester_version() >= (1, 2, 0)
         """
-        manifest_path = os.path.join(os.path.dirname(__file__), 'manifest.json')
-        with open(manifest_path, 'r', encoding='utf-8') as f:
-            version_str = json.load(f)['version']
-        return tuple(map(int, version_str.split('.')))
+        return _VERSION
 
 def validate_dependencies():
     """
@@ -35,7 +40,7 @@ def validate_dependencies():
     'validateDependencies': false in manifest.json.
     """
     try:
-        with open(os.path.join(os.path.dirname(__file__), 'manifest.json'), 'r') as f:
+        with open(Path(__file__).parent / 'manifest.json', 'r') as f:
             data = json.load(f)
 
         if not data.get('validateDependencies', True):
@@ -45,14 +50,18 @@ def validate_dependencies():
         errors = []
 
         for dep, info in deps.items():
-            version_action = f"{info.get('namespace')}_version"
+            version_action_name = f"{info.get('namespace')}_version"
             github_url = info.get('github', '')
             version_str = info.get('min_version') or info.get('version')
             try:
-                action_ref = actions
-                for part in version_action.split('.'):
-                    action_ref = getattr(action_ref, part)
-                installed = action_ref()
+                version_action = actions
+                for part in version_action_name.split('.'):
+                    version_action = getattr(version_action, part)
+                installed = version_action()
+
+                if not isinstance(installed, tuple):
+                    installed = tuple(int(x) for x in str(installed).split('.'))
+
                 required = tuple(int(x) for x in version_str.split('.'))
                 if installed < required:
                     installed_str = '.'.join(map(str, installed))
@@ -60,20 +69,24 @@ def validate_dependencies():
                     if github_url:
                         errors.append(f"    Navigate to the {dep} directory and run: git pull")
                         errors.append(f"    {github_url}")
-            except AttributeError:
-                errors.append(f"  Cannot verify {dep} {version_str}+ (missing or invalid {version_action} action)")
+                    errors.append("")
+            except Exception as e:
+                errors.append(f"  Cannot verify {dep} {version_str}+ (missing or invalid {version_action_name} action)")
                 if github_url:
                     errors.append(f"    Install/update from: {github_url}")
-            except Exception as e:
-                errors.append(f"  {dep}: {e}")
+                errors.append(f"    {e}")
+                errors.append("")
 
         if errors:
-            print(f"\n{data.get('name')}: dependency not met")
+            print(f"============================================================")
+            print(f"{data.get('name')}: dependency requirements not met\n")
             for error in errors:
                 print(error)
             print("  WARNING: Review code from unfamiliar sources before installing")
-            print(f"  To disable these warnings, set 'validateDependencies': false in {data.get('name')}/manifest.json")
-            print()
+            print("  Note: You may need to restart Talon after updating")
+            print("  To disable these warnings:")
+            print(f"    Set 'validateDependencies': false in {data.get('name')}/manifest.json")
+            print(f"============================================================")
     except:
         pass
 

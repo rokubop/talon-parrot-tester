@@ -54,9 +54,9 @@ def table_log():
             th()[text("Pattern", color=SECONDARY_COLOR)],
             # th()[text("Sounds", color=SECONDARY_COLOR)],
             th(align_items="flex_end")[text("Power", color=SECONDARY_COLOR)],
-            th(align_items="flex_end")[text(">Pow", color=SECONDARY_COLOR)] if show_thresholds else None,
+            th(align_items="flex_end")[text("> Pow", color=SECONDARY_COLOR)] if show_thresholds else None,
             th(align_items="flex_end")[text("Prob.", color=SECONDARY_COLOR)],
-            th(align_items="flex_end")[text(">Prob.", color=SECONDARY_COLOR)] if show_thresholds else None,
+            th(align_items="flex_end")[text("> Prob.", color=SECONDARY_COLOR)] if show_thresholds else None,
             *[
                 th(align_items="flex_end", justify_content="center")[
                     text("F0", color=SECONDARY_COLOR),
@@ -127,7 +127,8 @@ def page_detection_log():
     current_log_id, set_current_log_id = state.use("detection_current_log_id", None)
 
     def on_mount(e):
-        populate_detection_log_state()
+        if not detection_log_history:
+            populate_detection_log_state()
 
     effect(on_mount, [])
 

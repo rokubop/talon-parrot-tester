@@ -15,6 +15,11 @@ from .colors import (
     THROTTLE_COLOR,
 )
 
+LABEL_FONT = "consolas"
+LABEL_WEIGHT = None
+LABEL_FONT_SIZE = 16
+NUMBER_FONT = "consolas"
+
 def last_detection(size="small"):
     div, text, state = actions.user.ui_elements(["div", "text", "state"])
     detection_current_log_frames = state.get("detection_current_log_frames", [])
@@ -98,11 +103,11 @@ def subtitle(text_value):
 
 def number(value, **kwargs):
     text = actions.user.ui_elements("text")
-    return text(value, font_family="consolas", **kwargs)
+    return text(value, font_family=NUMBER_FONT, **kwargs)
 
 def number_threshold(value, **kwargs):
     text = actions.user.ui_elements("text")
-    return text(f">{value}", font_family="consolas", color=SECONDARY_COLOR, **kwargs)
+    return text(f">{value}", font_family=NUMBER_FONT, color=SECONDARY_COLOR, **kwargs)
 
 def status_cell(status: str, graceperiod: bool = False):
     text, icon = actions.user.ui_elements(["text", "icon"])
@@ -293,7 +298,7 @@ def pattern(props):
                                 for k, v in group
                                 for item in [
                                     td()[
-                                        text(k, font_size=14, color=ACCENT_COLOR),
+                                        text(k, font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
                                     ],
                                     td(margin_right=16)[
                                         number(v),
@@ -305,12 +310,12 @@ def pattern(props):
                     ] if threshold_groups else [
                         tr()[
                             td(position="relative")[
-                                text(">power", font_size=14, color=ACCENT_COLOR),
+                                text(">power", font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
                             ],
                             td(margin_right=16, position="relative")[
                                 number("0"),
                             ],
-                            td()[text(">probability", font_size=14, color=ACCENT_COLOR)],
+                            td()[text(">probability", font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT)],
                             td(margin_right=16)[number("0")],
                         ]
                     ]
@@ -330,8 +335,8 @@ def pattern(props):
         ],
         div(align_items="flex_start", border_left=1, border_color=BORDER_COLOR_LIGHTER)[
             div(flex_direction="row", gap=8, margin_left=15, align_items="center")[
-                text("sounds", font_size=14, color=ACCENT_COLOR),
-                text(",".join(pattern_data.get("sounds", [])), font_size=14),
+                text("sounds", font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
+                text(",".join(pattern_data.get("sounds", []))),
             ] if not small else None,
             table(padding=8, padding_bottom=0)[
                 *[
@@ -341,7 +346,7 @@ def pattern(props):
                             for k, v in group
                             for item in [
                                 td(position="relative")[
-                                    text(k, font_size=14, color=ACCENT_COLOR),
+                                    text(k, font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
                                 ],
                                 td(margin_right=16, position="relative")[
                                     number(v),
@@ -353,12 +358,12 @@ def pattern(props):
                 ] if threshold_groups else [
                     tr()[
                         td(position="relative")[
-                            text(">power", font_size=14, color=ACCENT_COLOR),
+                            text(">power", font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
                         ],
                         td(margin_right=16, position="relative")[
                             number("0"),
                         ],
-                        td()[text(">probability", font_size=14, color=ACCENT_COLOR)],
+                        td()[text(">probability", font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT)],
                         td(margin_right=16)[number("0")],
                     ]
                 ],
@@ -371,7 +376,7 @@ def pattern(props):
                                 td()[
                                     div(flex_direction="row", gap=4, align_items="center")[
                                         icon("clock", size=14, color="FFCC00"),
-                                        text(k, font_size=14, color=ACCENT_COLOR),
+                                        text(k, font_size=LABEL_FONT_SIZE, color=ACCENT_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
                                     ]
                                 ],
                                 td(margin_right=16)[number(v)],
@@ -382,7 +387,7 @@ def pattern(props):
                 ]
             ],
             div(flex_direction="row", gap=8, margin_left=15, align_items="center", margin_top=8)[
-                text("graceperiod", font_size=14, color=GRACE_COLOR),
+                text("graceperiod", color=GRACE_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
                 number(grace_period),
             ] if grace_period else None,
             table(padding=8, padding_bottom=0)[
@@ -394,7 +399,7 @@ def pattern(props):
                             for item in [
                                 td()[
                                     div(flex_direction="row", gap=4, align_items="center")[
-                                        text(k, font_size=14, color=GRACE_COLOR),
+                                        text(k, color=GRACE_COLOR, font_weight=LABEL_WEIGHT, font_family=LABEL_FONT),
                                     ]
                                 ],
                                 td(margin_right=16)[number(v)],
@@ -411,7 +416,7 @@ def pattern(props):
 #     div, text, icon = actions.user.ui_elements(["div", "text", "icon"])
 
 #     return div(flex_direction="row", border_width=1, border_color="555555", background_color=f"55555533", padding=4, border_radius=4)[
-#         text(name, font_size=14),
+#         text(name),
 #         icon("close", size=14, color="555555", stroke_width=3, margin_left=8),
 #     ]
 
@@ -423,5 +428,5 @@ def pattern(props):
 #     else:
 #         pattern_color = "555555"
 #     return div(border_width=1, border_color=pattern_color, background_color=f"{pattern_color}33", padding=4, border_radius=4)[
-#         text(f"+ {name}", font_size=14)
+#         text(f"+ {name}")
 #     ]

@@ -2,7 +2,7 @@ from talon import actions
 from ..parrot_integration_controller import (
     restore_patterns_paused,
     restore_patterns,
-    parrot_tester_initialize
+    parrot_tester_initialize,
 )
 from .page_about import page_about
 from .page_detection_log import page_detection_log
@@ -93,7 +93,7 @@ def play_button():
         actions.user.ui_elements_toggle_hints(show_hints)
         set_play(new_play)
         if new_play:
-            parrot_tester_initialize(on_initialize)
+            parrot_tester_initialize(lambda: None)
         else:
             parrot_tester_pause()
 

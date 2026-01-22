@@ -1,44 +1,42 @@
 # Parrot Tester
 
+![Version](https://img.shields.io/badge/version-0.7.0-blue)
+![Status](https://img.shields.io/badge/status-stable-green)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 Parrot Tester is a visualization tool to help you analyze your parrot integration with Talon, showing live data for frames, history, activity, and stats, using your existing `parrot_integration.py` and `patterns.json` files.
 
 ![preview](preview.png)
 
-## Prerequisites
-- Talon beta with a working parrot model
-- A `parrot_integration.py` file anywhere in your Talon user directory (will be auto discovered)
-- A `patterns.json` file anywhere in your Talon user directory (will be auto discovered)
-- `talon-ui-elements` v0.9 or greater - https://github.com/rokubop/talon-ui-elements
-
 ## Installation
 
-Download or clone this repository into your Talon user directory. This tool depends on version 0.9 or greater of `talon-ui-elements` library for the UI, so we will clone that as well.
+### Dependencies
 
-```bash
+- [**Talon Beta**](https://talon.wiki/Help/beta_talon/)
+- **Parrot** - Trained parrot model with `parrot_integration.py` and `patterns.json` files
+- [**talon-ui-elements**](https://github.com/rokubop/talon-ui-elements) (v0.13.0+)
+
+### Install
+
+Clone the dependencies and this repo into your [Talon](https://talonvoice.com/) user directory:
+
+```sh
 # mac and linux
 cd ~/.talon/user
 
 # windows
 cd ~/AppData/Roaming/talon/user
 
-# prerequisite
-git clone https://github.com/rokubop/talon-ui-elements.git
+# Dependencies
+git clone https://github.com/rokubop/talon-ui-elements
 
-# clone the Parrot Tester tool
-git clone https://github.com/rokubop/parrot_tester.git
+# This repo
+git clone https://github.com/rokubop/talon-parrot-tester
 ```
 
 Done! You can now use the Parrot Tester tool. 🎉
 
 Say "parrot tester" to toggle the UI and start testing!
-
-## Known Limitations
-**Folder names with dashes:** Parrot Tester cannot work with `parrot_integration.py` files located in directory paths containing dashes (e.g., `my-folder/parrot_integration.py`).
-
-**Options:** Either rename folders containing dashes to use underscores, or move your `parrot_integration.py` file to a different location that does not contain dashes.
-- Example: `my-folder/parrot_integration.py` → `my_folder/parrot_integration.py`
-
-If you change a folder name, you may also need to update your `parrot_integration.py` file to point to new paths.
 
 ## How it works
 

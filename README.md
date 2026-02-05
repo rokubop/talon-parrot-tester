@@ -1,6 +1,6 @@
 # Parrot Tester
 
-![Version](https://img.shields.io/badge/version-0.7.0-blue)
+![Version](https://img.shields.io/badge/version-0.8.0-blue)
 ![Status](https://img.shields.io/badge/status-stable-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
 

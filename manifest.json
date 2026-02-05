@@ -2,7 +2,7 @@
   "name": "talon-parrot-tester",
   "title": "Parrot Tester",
   "description": "Visual tool for testing parrot integration with Talon",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "status": "stable",
   "namespace": "user.parrot_tester",
   "github": "https://github.com/rokubop/talon-parrot-tester",
@@ -14,7 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "talon-ui-elements": {
-      "min_version": "0.13.0",
+      "min_version": "0.14.0",
       "namespace": "user.ui_elements",
       "github": "https://github.com/rokubop/talon-ui-elements"
     }
@@ -46,8 +46,8 @@
     ]
   },
   "validateDependencies": true,
-  "_generator": "talon-manifest-generator",
-  "_generatorVersion": "2.0.0",
+  "_generator": "talon-pack",
+  "_generatorVersion": "3.0.0",
   "_generatorRequiresVersionAction": true,
   "_generatorStrictNamespace": true,
   "_generatorFrozenFields": []

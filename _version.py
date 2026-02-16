@@ -53,7 +53,7 @@ def validate_dependencies():
     """
     try:
         manifest_path = Path(__file__).parent / 'manifest.json'
-        with open(manifest_path, 'r') as f:
+        with open(manifest_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         if not data.get('validateDependencies', True):

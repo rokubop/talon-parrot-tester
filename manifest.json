@@ -2,7 +2,7 @@
   "name": "talon-parrot-tester",
   "title": "Parrot Tester",
   "description": "Visual tool for testing parrot integration with Talon",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "status": "stable",
   "namespace": "user.parrot_tester",
   "github": "https://github.com/rokubop/talon-parrot-tester",

@@ -1,6 +1,6 @@
 # Parrot Tester
 
-![Version](https://img.shields.io/badge/version-0.8.1-blue)
+![Version](https://img.shields.io/badge/version-0.8.2-blue)
 ![Status](https://img.shields.io/badge/status-stable-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -14,7 +14,7 @@ Parrot Tester is a visualization tool to help you analyze your parrot integratio
 
 - [**Talon Beta**](https://talon.wiki/Help/beta_talon/)
 - **Parrot** - Trained parrot model with `parrot_integration.py` and `patterns.json` files
-- [**talon-ui-elements**](https://github.com/rokubop/talon-ui-elements) (v0.14.0+)
+- [**talon-ui-elements**](https://github.com/rokubop/talon-ui-elements) (v0.16.0+)
 
 ### Install
 
@@ -69,3 +69,6 @@ if 'throttle' in pattern:
 ```
 
 Grace thresholds should now work as expected, but you may need to manually add "throttle" to every pattern now.
+
+## More Talon packages
+Check out my other Talon packages for UI, mouse control, input mapping, and more at [talon-hub-roku](https://github.com/rokubop/talon-hub-roku).

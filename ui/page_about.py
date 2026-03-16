@@ -86,6 +86,21 @@ def page_about():
                     ],
                 ],
                 tr()[
+                    td()[text("More Talon Packages", color=SECONDARY_COLOR)],
+                    td()[
+                        link(
+                            url="https://github.com/rokubop/talon-hub-roku",
+                            minimize_on_click=True,
+                            flex_direction="row",
+                            gap=8,
+                            align_items="center"
+                        )[
+                            text("https://github.com/rokubop/talon-hub-roku", color=ACCENT_COLOR),
+                            icon("external_link", size=16, color=ACCENT_COLOR),
+                        ],
+                    ],
+                ],
+                tr()[
                     td()[text("Author", color=SECONDARY_COLOR)],
                     td()[text("Rokubop")],
                 ],
